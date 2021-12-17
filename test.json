@@ -1,7 +1,10 @@
 {
-    "users": {
-        "Ben": {
-            "pw": "Test"
-        }
+    "Ben": {
+        "pw": "532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25",
+        "scores": [12, 24, 5]
+    },
+    "Test": {
+        "pw": "0e9afc1abce58efdd6728ffd8078bc489d7ba2b6310164af1d956b27e97704db",
+        "scores": []
     }
 }
