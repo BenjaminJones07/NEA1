@@ -2,9 +2,14 @@ from lib import nChoice, run
 
 def main() -> None:
     while True:
-        usr, q = run(), True
-        if (choice := nChoice("Restart", "Show previous scores", "Quit")) == 1: q = False
-        elif choice == 2: print(f"Your previous scores are: {', '.join([str(x) for x in usr.getScores()])}")
-        if q: quit()
-
-main()
+        usr = run()
+        
+        match nChoice("Restart", "Show previous scores and restart", "Quit"):
+            case 2:
+                print(f"Your previous scores are: {', '.join([str(x) for x in usr.getScores()])}")
+            case 3: 
+                break
+        
+        print()
+        
+if __name__ == "__main__": main()
