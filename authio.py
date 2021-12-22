@@ -6,7 +6,16 @@ import os, json, hashlib
 def userFormat(pw: str, scores: List[int] = []) -> Dict[str, Union[str, List[int]]]:
     return {"pw": pw, "scores": scores}
 
-def strength(pw: str) -> bool:
+SYMBOLS = "~`! @#$%^&*()_-+={[}]|\:;\"'<,>.?/"
+lower = ''.join([chr(x + 97) for x in range(26)])
+nums = ''.join([str(x) for x in range(10)])
+
+def strength(pw: str) -> Union[str, bool]:
+    pw_asSet = set(pw)
+    if len(pw) < 8: return "Password needs at least 8 characters"
+    if not pw_asSet.intersection(lower.upper()): return "Password needs at least 1 uppercase letter"
+    if not pw_asSet.intersection(nums): return "Password needs at least 1 number"
+    if not pw_asSet.intersection(SYMBOLS): return "Password needs at least 1 symbol"
     return True
 
 def hashStr(pw: str) -> str:
@@ -57,8 +66,8 @@ class User:
     def getScores(self) -> List[int]:
         return self._scores
 
-    def addScore(self, score: int) -> List[int]:
-        self.scores.append(score)
+    def addScore(self, score: int) -> None:
+        self._scores.append(score)
         self.saveUsr()
 
     def __str__(self) -> str:
@@ -68,13 +77,15 @@ class UserHandler:
     def __init__(self, fs: FSIO = FSIO()) -> None:
         self.fs = fs
 
-    def reg(self, un: str, pw: str) -> Optional[User]:
-        if 0 in [len(un), len(pw)] or not strength(pw): return None # len(un) == 0 or len(pw) == 0
+    def reg(self, un: str, pw: str) -> Union[str, User]:
+        if 0 in [len(un), len(pw)]: return "One or more input was blank"
+        if not (issue := strength(pw)) is True: return issue
         return self.fs.addUser(un, userFormat(hashStr(pw)))
 
-    def login(self, un: str, pw: str) -> Optional[User]: #TODO
-        if 0 in [len(un), len(pw)] or not (usr := self.fs.getUser(un)): return None
-        if not usr.pw == hashStr(pw): return None
+    def login(self, un: str, pw: str) -> Union[str, User]:
+        if 0 in [len(un), len(pw)]: return "One or more input was blank"
+        if not (usr := self.fs.getUser(un)): return "User does not exist"
+        if not usr.pw == hashStr(pw): return "Incorrect password"
         return usr
 
 
