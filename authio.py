@@ -22,8 +22,6 @@ def hashStr(pw: str) -> str:
     return hashlib.sha256(pw.encode()).hexdigest()
 
 # Exceptions
-class FileNotExist(Exception):
-    def __init__(self): super.__init__("The file does not exist.")
 class FileNotSupported(Exception):
     def __init__(self): super.__init__("The file is not of a supported type (JSON).")
 class SaveError(Exception):
@@ -31,9 +29,10 @@ class SaveError(Exception):
 
 # Classes
 class FSIO:
-    def __init__(self, filename: str = "test.json") -> None:
+    def __init__(self, filename: str = "accts.json") -> None:
         if not filename[-5:] == ".json": raise FileNotSupported
-        if not os.path.isfile(filename): raise FileNotExist
+        if not os.path.isfile(filename):
+            with open(filename, "w") as f: f.write("{}")
         self.data, self.file = json.load(open(filename)), filename
 
     def save(self) -> bool:
@@ -79,6 +78,7 @@ class UserHandler:
 
     def reg(self, un: str, pw: str) -> Union[str, User]:
         if 0 in [len(un), len(pw)]: return "One or more input was blank"
+        if self.fs.userExists(un): return "User already exists"
         if not (issue := strength(pw)) is True: return issue
         return self.fs.addUser(un, userFormat(hashStr(pw)))
 

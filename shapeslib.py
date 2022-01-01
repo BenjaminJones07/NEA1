@@ -61,4 +61,4 @@ class Triangle(baseShape):
     def wrong(self) -> str:
         return "The formula for a triangles's area is (Base * Height)/2"
     
-shapesArr = [Circle, Rectangle, Triangle] # Allows for easy access to all shapes
+shapesArr = {"Circle": Circle, "Rectangle": Rectangle, "Triangle": Triangle} # Allows for easy access to all shapes
