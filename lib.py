@@ -1,146 +1,70 @@
-from typing import Optional, Type, Tuple
+from typing import Optional, Type
 import authio, shapeslib, random
-import PySimpleGUI as sg
 
-def run(user: Optional[authio.User] = None) -> Optional[Tuple[authio.User, int]]:
-    layout = [ # Authentication window layout
-        [
-            sg.Text("Login or Register")
-        ],
-        [
-            sg.HorizontalSeparator()
-        ],
-        [
-            sg.Text(key="-OUT-")
-        ],
-        [
-            sg.In(size=(20, 1), enable_events=True, default_text="Username", key="-UN-"),
-            sg.In(size=(20, 1), enable_events=True, default_text="Password", key="-PW-")
-        ],
-        [
-            sg.Button("Login"),
-            sg.Button("Register")
-        ]
-    ]
-    
-    window = sg.Window("Area Trainer", layout)
-    
-    uh = authio.UserHandler() # Initialize user handler
-    
-    while not isinstance(user, authio.User):
-        event, values = window.read()
-        
-        # User chooses to login or register
-        
-        authFuncs = {"Login": uh.login, "Register": uh.reg}
-        
-        if event == sg.WIN_CLOSED: # Check for window close
-            window.close()
+# Display choices and request input until valid
+def nChoice(*args: str) -> int:
+    [print(f"{x+1}) {s}") for (x,s) in enumerate(args)]
+    while True:
+        if not (choosed := input("Choice: ")).isdigit(): continue
+        if 0 <= int(choosed) - 1 and int(choosed) - 1 < len(args):
+            print()
+            return int(choosed)
+
+# Display a choice with a randomly placed correct answer and an exit message as the last choice, return score on correct, None on exit
+def randChoice(shape: Type[shapeslib.baseShape], end: str) -> Optional[int]:
+    print(prompt := f"What is the area of a {str(shape).lower()}?")
+    argsList = shape.wrongAreas()
+    argsList.insert(place := random.randint(0, len(argsList)), shape.getArea())
+    match nChoice(*argsList, end)-1:
+        case x if x == len(argsList):
             return None
+        case x if x == place:
+            return 2
+        case x:
+            print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.wrong())}")
+            choice = x
+            while choice == x:
+                print(prompt)
+                choice = nChoice(*argsList, end)-1 # Get choice
+                if choice == x: print("You've already chosen that!")
+            return int(choice == place)
+                
+
+def run() -> authio.User:
+    uh, user = authio.UserHandler(), None # Initialize user handler and user variable
+    
+    # User chooses to login or register
+    authFuncs = [uh.login, uh.reg]
+    authFunc = authFuncs[nChoice("Login", "Register") - 1]
+    
+    # Loop until valid login/registration
+    while not isinstance(user, authio.User):
+        user = authFunc(input("Username: "), input("Password: "))
+        if isinstance(user, str): print(user)
         
-        elif event in authFuncs:
-            user = authFuncs[event](values["-UN-"], values["-PW-"])
-            if isinstance(user, str): window["-OUT-"].update(user)
-        
-    window.close() # Authentication complete
+    print()
     
     # User now exists, and must continue to exist for the duration of the function
     
-    layout = [
-        [
-            sg.Text("Pick a shape to practice!")
-        ],
-        [
-            sg.HorizontalSeparator()
-        ],
-        [
-            sg.Listbox(
-                values = list(shapeslib.shapesArr.keys()), enable_events=True, size=(40, 20), key="-SHAPES-"
-            )
-        ]
-    ]
-    
-    window = sg.Window("Area Trainer", layout)
+    print("Pick a shape to practice!")
+    shape, score = shapeslib.shapesArr[nChoice("Circle", "Rectangle", "Triangle") - 1](), 0 # Initialize chosen shape and score count
     
     while True:
-        event, values = window.read()
+        shape.generate() # Generate random dimensions for shape
         
-        if event == sg.WIN_CLOSED: # Check for window close
-            window.close()
-            return None
-        
-        elif event == "-SHAPES-":
-            shape, score = shapeslib.shapesArr[values["-SHAPES-"][0]](), 0
-            break
-        
-    window.close()
-    
-    # A shape has been chosen and initialized
-    
-    layout = [
-        [
-            sg.Text(key="-PROMPT-")
-        ],
-        [
-            sg.HorizontalSeparator()
-        ],
-        [
-            sg.Text(key="-FEEDBACK-")
-        ],
-        [
-            sg.Listbox(
-                values = [], enable_events=True, size=(10, 5), key="-AREAS-"
-            )
-        ],
-        [
-            sg.Button("Quit")
-        ]
-    ]
-    
-    window = sg.Window("Area Trainer", layout, finalize=True, element_justification='c')
-    
-    done = False
-    while not done:
-        points, chosen, _ = 2, list(), shape.generate() # Generate random dimensions for shape
-        (areas := shape.wrongAreas()).insert(random.randint(0, len(areas)), area := shape.getArea())
-        
-        window["-PROMPT-"].update(f"What is the area of a {str(shape).lower()}")
-        window["-AREAS-"].update(areas)
-        
-        while True:
-            event, values = window.read()
-            
-            if event == sg.WIN_CLOSED: # Check for window close
-                window.close()
-                return None
-            
-            elif event == "-AREAS-":
-                value = values["-AREAS-"][0]
-                
-                if value == area:
-                    window["-FEEDBACK-"].update("Correct")
-                    score += points
-                    break
-                
-                if value in chosen:
-                    window["-FEEDBACK-"].update("You've already chosen that!")
-                    continue
-                
-                points, _ = points - 1, chosen.append(value)
-                
-                if points == 0:
-                    window["-FEEDBACK-"].update(f"Incorrect, the answer was {area}") # Print correct answer on 0 score
-                    break
-                
-                window["-FEEDBACK-"].update(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.wrong())}")
-                
-            elif event == "Quit":
-                done = True
-                window.close()
+        match randChoice(shape, "Exit"):
+            case None: # User chose to exit
                 break
+            case x: # User did not choose to exit
+                score += x # Add to score
+                if x == 0: print(f"Incorrect, the answer was {shape.getArea()}") # Print correct answer on 0 score
+                else: print("Correct!")
+            
+        print()
         
     # Save and print score
     user.addScore(score)
+    print(f"Your score for this session was {score}!")
     
     # Return user for score access in menu
-    return (user, score)
+    return user

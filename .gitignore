@@ -1,6 +1,3 @@
 mysetup.py
 accts.json
-dist/
-build/
-main.spec
 __pycache__/
