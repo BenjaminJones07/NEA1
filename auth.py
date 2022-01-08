@@ -1,31 +1,36 @@
 # Imports
-from typing import List, Optional, Union, ForwardRef, Dict
+from typing import List, Optional, Set, Union, ForwardRef, Dict
 import os, json, hashlib
 
-# Helper functions
-def userFormat(pw: str, scores: List[int] = []) -> Dict[str, Union[str, List[int]]]:
-    return {"pw": pw, "scores": scores}
-
+#Globals
 SYMBOLS = "~`! @#$%^&*()_-+={[}]|\:;\"'<,>.?/"
-lower = ''.join([chr(x + 97) for x in range(26)])
+upper = ''.join([chr(x + 97) for x in range(26)])
 nums = ''.join([str(x) for x in range(10)])
-
-def strength(pw: str) -> Union[str, bool]:
-    pw_asSet = set(pw)
-    if len(pw) < 8: return "Password needs at least 8 characters"
-    if not pw_asSet.intersection(lower.upper()): return "Password needs at least 1 uppercase letter"
-    if not pw_asSet.intersection(nums): return "Password needs at least 1 number"
-    if not pw_asSet.intersection(SYMBOLS): return "Password needs at least 1 symbol"
-    return True
-
-def hashStr(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
 
 # Exceptions
 class FileNotSupported(Exception):
     def __init__(self): super.__init__("The file is not of a supported type (JSON).")
 class SaveError(Exception):
     def __init__(self): super.__init__("The user object could not be saved.")
+
+# Helper functions
+def userFormat(pw: str, scores: List[int] = []) -> Dict[str, Union[str, List[int]]]:
+    return {"pw": pw, "scores": scores}
+
+# Ensures data created by each intersection is removed line-by-line
+def intersectionCheck(pwSet: Set[chr], check: Union[Set[chr], str]) -> bool:
+    return not pwSet.intersection(check)
+
+def strength(pw: str) -> Union[str, bool]:
+    pw_asSet = set(pw)
+    if len(pw) < 8: return "Password needs at least 8 characters"
+    if intersectionCheck(pw_asSet, upper): return "Password needs at least 1 uppercase letter"
+    if intersectionCheck(pw_asSet, nums): return "Password needs at least 1 number"
+    if intersectionCheck(pw_asSet, SYMBOLS): return "Password needs at least 1 symbol"
+    return True
+
+def hashStr(pw: str) -> str:
+    return hashlib.sha256(pw.encode()).hexdigest()
 
 # Classes
 class FSIO:
@@ -55,6 +60,9 @@ class FSIO:
         if not self.updateUser(un, obj): return None
         return self.getUser(un)
 
+    def __repr__(self) -> str:
+        return f"FSIO({self.data=}, {self.file=})"
+
 class User:
     def __init__(self, un: str, obj: Dict[str, Union[str, List[int]]], fs: FSIO) -> None:
         self.un, self.pw, self._scores, self._fs = un, obj["pw"], obj["scores"], fs
@@ -69,12 +77,11 @@ class User:
         self._scores.append(score)
         self.saveUsr()
 
-    def __str__(self) -> str:
-        return f"User({self.un=}, {self._scores=})"
+    def __repr__(self) -> str:
+        return f"User({self.un=}, {self.pw=}, {self._scores=}, self._fs=`{self._fs}`)"
 
 class UserHandler:
-    def __init__(self, fs: FSIO = FSIO()) -> None:
-        self.fs = fs
+    def __init__(self, fs: FSIO = FSIO()) -> None: self.fs = fs
 
     def reg(self, un: str, pw: str) -> Union[str, User]:
         if 0 in [len(un), len(pw)]: return "One or more input was blank"
@@ -87,14 +94,3 @@ class UserHandler:
         if not (usr := self.fs.getUser(un)): return "User does not exist"
         if not usr.pw == hashStr(pw): return "Incorrect password"
         return usr
-
-
-if __name__ == "__main__":
-    uh = UserHandler()
-
-    print(uh.login("Ben", "Nah"))
-    print(uh.login("Ben", "Test"))
-    print(uh.login("Test", "Nah"))
-
-    print(uh.reg("Ben", "Test"))
-    print(uh.reg("Test", "Nah"))

@@ -1,7 +1,7 @@
-from abc import ABCMeta, abstractmethod
 from random import randint, sample, choice
-from math import pi
+from abc import ABCMeta, abstractmethod
 from typing import List
+from math import pi
 
 MAX = 12
 def rand() -> int: return randint(1, MAX)
@@ -20,7 +20,7 @@ class baseShape(metaclass=ABCMeta):
 # generate() : Generates new dimensions
 # getArea()  : Returns shape's area
 # __str__()  : Generates prompt
-# wrong()    : Returns formula for shape area (displayed on one wrong answer)
+# formula()    : Returns formula for shape area (displayed on one wrong answer)
 
 class Circle(baseShape):
     def generate(self) -> None:
@@ -32,7 +32,7 @@ class Circle(baseShape):
     def __str__(self) -> str:
         return f"Circle with radius {self.radius}"
     
-    def wrong(self) -> str:
+    def formula(self) -> str:
         return "The formula for a circle's area is π * Radius²"
     
 class Rectangle(baseShape):
@@ -45,7 +45,7 @@ class Rectangle(baseShape):
     def __str__(self) -> str:
         return f"Rectangle with width {self.width} and height {self.height}"
 
-    def wrong(self) -> str:
+    def formula(self) -> str:
         return "The formula for a rectangles's area is Base * Height"
 
 class Triangle(baseShape):
@@ -58,7 +58,7 @@ class Triangle(baseShape):
     def __str__(self) -> str:
         return f"Triangle with base {self.base} and height {self.height}"
     
-    def wrong(self) -> str:
+    def formula(self) -> str:
         return "The formula for a triangles's area is (Base * Height)/2"
     
-shapesArr = {"Circle": Circle, "Rectangle": Rectangle, "Triangle": Triangle} # Allows for easy access to all shapes
+shapesArr = [Circle, Rectangle, Triangle] # Allows for easy access to all shapes

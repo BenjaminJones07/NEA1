@@ -1,5 +1,5 @@
 from typing import Optional, Type
-import authio, shapeslib, random
+import auth, shapes, random
 
 # Display choices and request input until valid
 def nChoice(*args: str) -> int:
@@ -11,27 +11,27 @@ def nChoice(*args: str) -> int:
             return int(choosed)
 
 # Display a choice with a randomly placed correct answer and an exit message as the last choice, return score on correct, None on exit
-def randChoice(shape: Type[shapeslib.baseShape], end: str) -> Optional[int]:
+def randChoice(shape: Type[shapes.baseShape], end: str) -> Optional[int]:
     print(prompt := f"What is the area of a {str(shape).lower()}?")
     argsList = shape.wrongAreas()
     argsList.insert(place := random.randint(0, len(argsList)), shape.getArea())
-    match nChoice(*argsList, end)-1:
+
+    match nChoice(*argsList, end) - 1:
         case x if x == len(argsList):
             return None
         case x if x == place:
             return 2
-        case x:
-            print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.wrong())}")
-            choice = x
-            while choice == x:
-                print(prompt)
-                choice = nChoice(*argsList, end)-1 # Get choice
-                if choice == x: print("You've already chosen that!")
-            return int(choice == place)
-                
+    
+    print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.formula())}")
+    choice = x
+    while choice == x:
+        print(prompt)
+        choice = nChoice(*argsList, end)-1 # Get choice
+        if choice == x: print("You've already chosen that!")
+    return int(choice == place)
 
 def run() -> authio.User:
-    uh, user = authio.UserHandler(), None # Initialize user handler and user variable
+    uh, user = auth.UserHandler(), None # Initialize user handler and user variable
     
     # User chooses to login or register
     authFuncs = [uh.login, uh.reg]
@@ -47,7 +47,7 @@ def run() -> authio.User:
     # User now exists, and must continue to exist for the duration of the function
     
     print("Pick a shape to practice!")
-    shape, score = shapeslib.shapesArr[nChoice("Circle", "Rectangle", "Triangle") - 1](), 0 # Initialize chosen shape and score count
+    shape, score = shapes.shapesArr[nChoice("Circle", "Rectangle", "Triangle") - 1](), 0 # Initialize chosen shape and score count
     
     while True:
         shape.generate() # Generate random dimensions for shape
@@ -59,7 +59,7 @@ def run() -> authio.User:
                 score += x # Add to score
                 if x == 0: print(f"Incorrect, the answer was {shape.getArea()}") # Print correct answer on 0 score
                 else: print("Correct!")
-            
+
         print()
         
     # Save and print score
