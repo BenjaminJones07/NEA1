@@ -5,6 +5,8 @@ def main() -> None:
     while True:
         usr = run() # User is returned from game
         
+        if not usr: break # Allow for exit from game menus
+
         # Get user choice
         match nChoice("Restart", "Show previous scores and restart", "Quit"):
             case 2:

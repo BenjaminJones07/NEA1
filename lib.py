@@ -21,21 +21,22 @@ def randChoice(shape: Type[shapes.baseShape], end: str) -> Optional[int]:
             return None
         case x if x == place:
             return 2
-    
-    print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.formula())}")
-    choice = x
-    while choice == x:
-        print(prompt)
-        choice = nChoice(*argsList, end)-1 # Get choice
-        if choice == x: print("You've already chosen that!")
-    return int(choice == place)
+        case x:
+            print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.formula())}")
+            choice = x
+            while choice == x:
+                print(prompt)
+                choice = nChoice(*argsList, end)-1 # Get choice
+                if choice == x: print("You've already chosen that!")
+            return int(choice == place)
 
-def run() -> authio.User:
+def run() -> Optional[authio.User]:
     uh, user = auth.UserHandler(), None # Initialize user handler and user variable
     
     # User chooses to login or register
     authFuncs = [uh.login, uh.reg]
-    authFunc = authFuncs[nChoice("Login", "Register") - 1]
+    try: authFunc = authFuncs[nChoice("Login", "Register", "Quit") - 1]
+    except IndexError: return None
     
     # Loop until valid login/registration
     while not isinstance(user, authio.User):
