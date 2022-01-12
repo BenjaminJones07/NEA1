@@ -9,9 +9,9 @@ def main() -> None:
 
         # Get user choice
         match nChoice("Restart", "Show previous scores and restart", "Quit"):
-            case 2:
+            case 1:
                 print(f"Your previous score(s) are: {', '.join([str(x) for x in usr.getScores()])}") # Display previous scores
-            case 3: 
+            case 2: 
                 break # Exit
         
         # Restart does not need a case as it happens by default

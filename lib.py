@@ -8,7 +8,7 @@ def nChoice(*args: str) -> int:
         if not (choosed := input("Choice: ")).isdigit(): continue
         if 0 <= int(choosed) - 1 and int(choosed) - 1 < len(args):
             print()
-            return int(choosed)
+            return int(choosed) - 1
 
 # Display a choice with a randomly placed correct answer and an exit message as the last choice, return score on correct, None on exit
 def randChoice(shape: Type[shapes.baseShape], end: str) -> Optional[int]:
@@ -16,30 +16,30 @@ def randChoice(shape: Type[shapes.baseShape], end: str) -> Optional[int]:
     argsList = shape.wrongAreas()
     argsList.insert(place := random.randint(0, len(argsList)), shape.getArea())
 
-    match nChoice(*argsList, end) - 1:
+    match nChoice(*argsList, end):
         case x if x == len(argsList):
             return None
         case x if x == place:
             return 2
         case x:
-            print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.formula())}")
+            print(f"Incorrect, {(lambda s: s[:1].lower() + s[1:] if s else '')(shape.formula())}") # Lambda to ensure first letter is uppercase
             choice = x
             while choice == x:
                 print(prompt)
-                choice = nChoice(*argsList, end)-1 # Get choice
+                choice = nChoice(*argsList, end) # Get choice
                 if choice == x: print("You've already chosen that!")
             return int(choice == place)
 
-def run() -> Optional[authio.User]:
+def run() -> Optional[auth.User]:
     uh, user = auth.UserHandler(), None # Initialize user handler and user variable
     
     # User chooses to login or register
     authFuncs = [uh.login, uh.reg]
-    try: authFunc = authFuncs[nChoice("Login", "Register", "Quit") - 1]
+    try: authFunc = authFuncs[nChoice("Login", "Register", "Quit")]
     except IndexError: return None
     
     # Loop until valid login/registration
-    while not isinstance(user, authio.User):
+    while not isinstance(user, auth.User):
         user = authFunc(input("Username: "), input("Password: "))
         if isinstance(user, str): print(user)
         
@@ -48,7 +48,7 @@ def run() -> Optional[authio.User]:
     # User now exists, and must continue to exist for the duration of the function
     
     print("Pick a shape to practice!")
-    shape, score = shapes.shapesArr[nChoice("Circle", "Rectangle", "Triangle") - 1](), 0 # Initialize chosen shape and score count
+    shape, score = shapes.shapesArr[nChoice("Circle", "Rectangle", "Triangle")](), 0 # Initialize chosen shape and score count
     
     while True:
         shape.generate() # Generate random dimensions for shape
